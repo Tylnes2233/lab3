@@ -90,7 +90,7 @@ export const useCoursesStore = defineStore('courses', () => {
 
   const enrolledCourses = ref<EnrolledCourse[]>(loadEnrolled())
 
-  const loadProfile = (): StudentProfile => {
+const loadProfile = (): StudentProfile => {
     try {
       const raw = sessionStorage.getItem(PROFILE_KEY)
       if (raw) return JSON.parse(raw)
@@ -120,7 +120,7 @@ export const useCoursesStore = defineStore('courses', () => {
     currentUser.value = trimmed
     sessionStorage.setItem(AUTH_KEY, trimmed)
     if (!sessionStorage.getItem(PROFILE_KEY)) {
-      profile.value.name = trimmed
+      profile.value = { ...profile.value, name: trimmed }
       sessionStorage.setItem(PROFILE_KEY, JSON.stringify(profile.value))
     }
   }
@@ -140,26 +140,35 @@ export const useCoursesStore = defineStore('courses', () => {
 
   function enrollInCourse(courseId: number) {
     if (isEnrolled(courseId)) return
-    const target = courses.value.find((c) => c.id === courseId)
-    if (!target) return
+    const exists = courses.value.some((c) => c.id === courseId)
+    if (!exists) return
 
-    target.studentsCount += 1
-    enrolledCourses.value.push({
-      courseId,
-      completedModuleIds: []
-    })
+    courses.value = courses.value.map((course) =>
+      course.id === courseId
+        ? { ...course, studentsCount: course.studentsCount + 1 }
+        : course
+    )
+
+    enrolledCourses.value = [
+      ...enrolledCourses.value,
+      { courseId, completedModuleIds: [] }
+    ]
+
     sessionStorage.setItem(ENROLLED_KEY, JSON.stringify(enrolledCourses.value))
   }
 
   function toggleModuleCompletion(courseId: number, moduleId: number) {
-    const record = enrolledCourses.value.find((e) => e.courseId === courseId)
-    if (!record) return
-
-    if (record.completedModuleIds.includes(moduleId)) {
-      record.completedModuleIds = record.completedModuleIds.filter((id) => id !== moduleId)
-    } else {
-      record.completedModuleIds.push(moduleId)
-    }
+    enrolledCourses.value = enrolledCourses.value.map((record) => {
+      if (record.courseId !== courseId) return record
+      const exists = record.completedModuleIds.includes(moduleId)
+      const updatedModules = exists
+        ? record.completedModuleIds.filter((id) => id !== moduleId)
+        : [...record.completedModuleIds, moduleId]
+      return {
+        ...record,
+        completedModuleIds: updatedModules
+      }
+    })
     sessionStorage.setItem(ENROLLED_KEY, JSON.stringify(enrolledCourses.value))
   }
 

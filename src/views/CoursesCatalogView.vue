@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { Clock, Users, UserCheck, Tag, Filter, RotateCcw } from 'lucide-vue-next'
 import { useCoursesStore } from '../stores/courses.store.ts'
+import { useCourseFilter } from '../composables/useCourseFilter.ts'
 import { ROUTE_NAMES } from '../router/index.ts'
 import BaseCard from '../components/BaseCard.vue'
 import type { CourseLevel } from '../types/course.ts'
@@ -10,28 +10,18 @@ import type { CourseLevel } from '../types/course.ts'
 const store = useCoursesStore()
 const { courses, allTags } = storeToRefs(store)
 
-const selectedLevel = ref<string>('All')
-const selectedTag = ref<string>('All')
-
-const levels: ('All' | CourseLevel)[] = ['All', 'Початковий', 'Середній', 'Просунутий']
-
-const filteredCourses = computed(() => {
-  return courses.value.filter((course) => {
-    const matchesLevel = selectedLevel.value === 'All' || course.level === selectedLevel.value
-    const matchesTag = selectedTag.value === 'All' || course.tags.includes(selectedTag.value)
-    return matchesLevel && matchesTag
-  })
-})
+const {
+  selectedLevel,
+  selectedTag,
+  levels,
+  filteredCourses,
+  resetFilters
+} = useCourseFilter(courses)
 
 const levelBadgeClass = (level: CourseLevel) => {
   if (level === 'Початковий') return 'badge-success'
   if (level === 'Середній') return 'badge-warning'
   return 'badge-error'
-}
-
-const resetFilters = () => {
-  selectedLevel.value = 'All'
-  selectedTag.value = 'All'
 }
 </script>
 

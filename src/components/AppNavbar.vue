@@ -1,22 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { GraduationCap, LogIn, LogOut, User, BookOpen, Palette } from 'lucide-vue-next'
 import { useCoursesStore } from '../stores/courses.store'
+import { useTheme } from '../composables/useTheme'
 import { ROUTE_NAMES } from '../router'
 
 const router = useRouter()
 const store = useCoursesStore()
 const { isAuthenticated, currentUser } = storeToRefs(store)
-
-const themes = ['light', 'dark', 'corporate', 'emerald']
-const activeTheme = ref('light')
-
-const switchTheme = (theme: string) => {
-  activeTheme.value = theme
-  document.documentElement.setAttribute('data-theme', theme)
-}
+const { themes, activeTheme, switchTheme } = useTheme()
 
 const handleLogout = () => {
   store.logout()
